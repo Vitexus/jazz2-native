@@ -1,0 +1,18 @@
+Source: jazz2-native
+Section: games
+Priority: optional
+Maintainer: Vítězslav Dvořák <info@vitexsoftware.cz>
+Build-Depends: cmake, 	debhelper-compat (= 12), libglfw3-dev, libgl1-mesa-dev
+Standards-Version: 4.5.0
+Homepage: https://github.com/deathkiller/jazz2-native
+Vcs-Git: git@github.com:deathkiller/jazz2-native.git
+Vcs-Browser: https://github.com/deathkiller/jazz2-native
+
+Package: jazz2-native
+Architecture: any
+Multi-Arch: foreign
+Depends: ${shlibs:Depends}, ${misc:Depends}, libglfw3, libopenal1, libopenmpt0 
+# libglew2.2,  ??
+Description: Jazz² linux reimplementation
+ Jazz² Resurrection: Native C++ reimplementation 
+ of Jazz Jackrabbit 2 
