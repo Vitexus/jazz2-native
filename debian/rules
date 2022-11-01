@@ -48,8 +48,8 @@ override_dh_auto_install:
 	dh_auto_install
 	debian/mkico.sh
 	mkdir -p debian/jazz2-native/usr/share/ debian/jazz2-native/usr/games
-	mv debian/jazz2-native/usr/share/Jazz²\ Resurrection  debian/jazz2-native/usr/share/jazz2-native
 	mv debian/jazz2-native/usr/jazz2 debian/jazz2-native/usr/games
+	#mv debian/jazz2-native/usr/share/Jazz²\ Resurrection  debian/jazz2-native/usr/share/jazz2-native
 
 override_dh_shlibdeps:
 #    dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
