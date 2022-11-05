@@ -13,6 +13,14 @@ Architecture: any
 Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}, libglfw3, libopenal1, libopenmpt0 
 # libglew2.2,  ??
+Recommends: jazz2-data
 Description: Jazz² linux reimplementation
  Jazz² Resurrection: Native C++ reimplementation 
  of Jazz Jackrabbit 2 
+
+Package: jazz2-data
+Architecture: any
+Multi-Arch: foreign
+Depends: ${shlibs:Depends}, ${misc:Depends}, libglfw3, libopenal1, libopenmpt0 
+Description: Original Jazz² data
+ Jazz² Data Files Only for game owners!

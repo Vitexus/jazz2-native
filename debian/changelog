@@ -1,6 +1,10 @@
-jazz2-native (0.1) UNRELEASED; urgency=low
+jazz2-native (1.1.0) UNRELEASED; urgency=low
 
+  [ Vítězslav Dvořák ]
   * Initial release. Closes: #nnnn
     <nnnn is the bug number of your ITP>
 
- -- Vítězslav Dvořák <info@vitexsoftware.cz>  Tue, 01 Nov 2022 15:01:06 +0100
+  [ vitex ]
+  * Gamepads and other fixes
+
+ -- vitex <info@vitexsoftware.cz>  Sat, 05 Nov 2022 02:06:43 +0100

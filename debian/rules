@@ -36,7 +36,6 @@ override_dh_auto_configure:
 		-DNCINE_LINKTIME_OPTIMIZATION=ON \
 		-DVERSION_NUM=${GIT_VERSION_JAZZ2} \
 		-DVERSION_SUFFIX=-${GIT_COMMIT_JAZZ2} \
-		#-DSPAWN=ON
 
 override_dh_auto_install:
 	cp -rv Content obj-${DEB_HOST_MULTIARCH}/Content
@@ -44,12 +43,13 @@ override_dh_auto_install:
 # 	for locale in $$(ls "Translations/*.po") ; do \
 # 	    echo mkdir /usr/share/locale/$$locale/LC_MESSAGES \
 # 	    echo msgfmt -o /usr/share/locale/$$locale/LC_MESSAGES/JAZZ2.mo Translations/$$locale .po  ; \
-# 	done 
+# 	done
 	dh_auto_install
+	mkdir -p debian/jazz2-native/usr/share
+	mv debian/tmp/usr/share/*	debian/jazz2-native/usr/share
 	debian/mkico.sh
-	mkdir -p debian/jazz2-native/usr/share/ debian/jazz2-native/usr/games
-	mv debian/jazz2-native/usr/jazz2 debian/jazz2-native/usr/games
-	#mv debian/jazz2-native/usr/share/Jazz²\ Resurrection  debian/jazz2-native/usr/share/jazz2-native
+	mkdir -p debian/jazz2-data/usr/share/games/jazz2
+	[ -d debian/Jazz2 ] && cp -r debian/Jazz2/* debian/jazz2-data/usr/share/games/jazz2
 
 override_dh_shlibdeps:
 #    dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

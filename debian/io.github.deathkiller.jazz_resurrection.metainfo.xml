@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.deathkiller.jazz_resurrection</id>
+  
+  <name>Jazz² Resurrection</name>
+  <summary>Native C++ reimplementation of Jazz Jackrabbit 2 </summary>
+  
+  <metadata_license>MIT</metadata_license>
+  <project_license>GPL-3.0-only</project_license>
+  
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+    <control>gamepad</control>
+  </supports>
+  
+  <description>
+    <p>
+      Jazz² Resurrection is reimplementation of the game Jazz Jackrabbit 2 released in 1998. Supports various versions of the game (Shareware Demo, Holiday Hare &apos;98, The Secret Files and Christmas Chronicles). Also, it partially supports some features of JJ2+ extension and MLLE. This repository contains fully rewritten game in C++ with better performance and many improvements.
+    </p>
+  </description>
+  
+  <launchable type="desktop-id">io.github.deathkiller.jazz_resurrection.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/deathkiller/jazz2/master/Docs/Screen2.gif</image>
+    </screenshot>
+  </screenshots>
+</component>
+
