@@ -18,8 +18,9 @@
 ## Introduction
 Jazz² Resurrection is reimplementation of the game **Jazz Jackrabbit 2** released in 1998. Supports various versions of the game (Shareware Demo, Holiday Hare '98, The Secret Files and Christmas Chronicles). Also, it partially supports some features of JJ2+ extension and MLLE. This repository contains fully rewritten game in C++ with better performance and many improvements. Further information can be found [here](http://deat.tk/jazz2/).
 
-[![Build Status](https://img.shields.io/appveyor/ci/deathkiller/jazz2/master.svg?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTI0IDIuNXYxOUwxOCAyNCAwIDE4LjV2LS41NjFsMTggMS41NDVWMHpNMSAxMy4xMTFMNC4zODUgMTAgMSA2Ljg4OWwxLjQxOC0uODI3TDUuODUzIDguNjUgMTIgM2wzIDEuNDU2djExLjA4OEwxMiAxN2wtNi4xNDctNS42NS0zLjQzNCAyLjU4OXpNNy42NDQgMTBMMTIgMTMuMjgzVjYuNzE3eiI+PC9wYXRoPjwvc3ZnPg==)](https://ci.appveyor.com/project/deathkiller/jazz2-native)
-[![Latest Release](https://img.shields.io/github/v/tag/deathkiller/jazz2?label=release)](https://github.com/deathkiller/jazz2/releases)
+[![Build Status](https://img.shields.io/github/workflow/status/deathkiller/jazz2-native/Linux?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTI0IDIuNXYxOUwxOCAyNCAwIDE4LjV2LS41NjFsMTggMS41NDVWMHpNMSAxMy4xMTFMNC4zODUgMTAgMSA2Ljg4OWwxLjQxOC0uODI3TDUuODUzIDguNjUgMTIgM2wzIDEuNDU2djExLjA4OEwxMiAxN2wtNi4xNDctNS42NS0zLjQzNCAyLjU4OXpNNy42NDQgMTBMMTIgMTMuMjgzVjYuNzE3eiI+PC9wYXRoPjwvc3ZnPg==)](https://github.com/deathkiller/jazz2-native/actions)
+[![Latest Release](https://img.shields.io/github/v/tag/deathkiller/jazz2?label=release)](https://github.com/deathkiller/jazz2/releases/latest)
+[![All Downloads](https://img.shields.io/github/downloads/deathkiller/jazz2/total.svg?color=blueviolet)](https://github.com/deathkiller/jazz2/releases)
 [![Code Quality](https://img.shields.io/codacy/grade/64eb3ca12bd04c64bf3f3515744b591a.svg?logo=codacy&logoColor=ffffff)](https://www.codacy.com/app/deathkiller/jazz2-native)
 [![License](https://img.shields.io/github/license/deathkiller/jazz2-native.svg)](https://github.com/deathkiller/jazz2-native/blob/master/LICENSE)
 [![Discord](https://img.shields.io/discord/355651795390955520.svg?color=839ef7&label=chat&logo=discord&logoColor=ffffff&labelColor=586eb5)](https://discord.gg/Y7SBvkD)
@@ -37,7 +38,7 @@ Jazz² Resurrection is reimplementation of the game **Jazz Jackrabbit 2** releas
 ### Windows
 * Download the game
 * Copy original *Jazz Jackrabbit 2* directory to `‹Game›\Source\`
-* Run `‹Game›\Jazz2.exe` or `‹Game›\Jazz2_avx2.exe` application
+* Run `‹Game›\Jazz2.exe`, `‹Game›\Jazz2_avx2.exe` or `‹Game›\Jazz2_sdl2.exe` application
 
 `‹Game›` *is path to Jazz² Resurrection. Cache is recreated during intro cinematics on the first startup, so it can't be skipped.*
 
@@ -45,7 +46,7 @@ Jazz² Resurrection is reimplementation of the game **Jazz Jackrabbit 2** releas
 * Download the game
 * Install dependencies: `sudo apt install libglew2.2 libglfw3 libopenal1 libopenmpt0`
 * Copy original *Jazz Jackrabbit 2* directory to `‹Game›/Source/`
-* Run `‹Game›/jazz2`, `‹Game›/jazz2_clang` or `‹Game›/jazz2_sdl2` application
+* Run `‹Game›/jazz2` or `‹Game›/jazz2_sdl2` application
 
 `‹Game›` *is path to Jazz² Resurrection. Cache is recreated during intro cinematics on the first startup, so it can't be skipped.*
 
@@ -69,42 +70,28 @@ Jazz² Resurrection is reimplementation of the game **Jazz Jackrabbit 2** releas
 
 ## Building the application
 ### Windows
-* Install build dependencies
+* Download [build dependencies](https://github.com/deathkiller/jazz2-libraries) to `‹Repository›\Libs\`
 * Open the solution in [Microsoft Visual Studio 2019](https://www.visualstudio.com/) (or newer) and build it
   * CMake is **not** recommended for Windows build, but it should work too
 
 ### Linux
-* Install build dependencies
-```bash
-# Install OpenGL library
-sudo apt-get install -y libgl1-mesa-dev
-
-# Download nCine dependencies
-cd ..
-git clone https://github.com/nCine/nCine-libraries-artifacts.git
-cd nCine-libraries-artifacts
-
-# Replace "libraries-linux-gcc" with "libraries-linux-clang" if Clang compiler is used
-git checkout libraries-linux-gcc
-LIBRARIES_FILE=$(ls -t | head -n 1) && tar xpzf $LIBRARIES_FILE
-mv nCine-external ..
-cd ..
-rm -rf nCine-libraries-artifacts
-```
+* Build dependencies will be downloaded automatically by **CMake**
+  * Can be disabled with `NCINE_DOWNLOAD_DEPENDENCIES` option, then download [build dependencies](https://github.com/deathkiller/jazz2-libraries) manually to `‹Repository›/Libs/`
 * Build the solution with **CMake**
-  * Run `./BuildLinuxGcc.sh` to build with GCC compiler
+  * Run `./BuildLinuxGcc.sh` (GLFW) or `./BuildLinuxGcc_SDL2.sh` (SDL2) to build with GCC compiler
   * Run `./BuildLinuxClang.sh` to build with Clang compiler
 
 ### Web (Emscripten)
-* Install build dependencies
+* Install Emscripten SDK (preferably to `../emsdk/`)
 ```bash
-# Install Emscripten SDK
 cd ..
 git clone https://github.com/emscripten-core/emsdk.git
 cd emsdk
 ./emsdk install latest
 ./emsdk activate latest
 ```
+* Build dependencies will be downloaded automatically by **CMake**
+  * Can be disabled with `NCINE_DOWNLOAD_DEPENDENCIES` option, then download [build dependencies](https://github.com/deathkiller/jazz2-libraries) manually to `‹Repository›/Libs/`
 * Put required game files to `./Content/` directory – the files must be provided in advance
 * Build the solution with **CMake**
   * Run `./BuildEmscripten.sh` to build with Emscripten
@@ -113,30 +100,17 @@ cd emsdk
 * Install Android SDK (preferably to `../android-sdk/`)
 * Install Android NDK (preferably to `../android-ndk/`)
 * Install Gradle (preferably to `../gradle/`)
-* Install build dependencies
-```bash
-# Install OpenGL library
-sudo apt-get install -y libgl1-mesa-dev
-
-# Download nCine dependencies
-cd ..
-git clone https://github.com/nCine/nCine-libraries-artifacts.git
-cd nCine-libraries-artifacts
-
-git checkout android-libraries-armeabi-v7a
-LIBRARIES_FILE=$(ls -t | head -n 1) && tar xpzf $LIBRARIES_FILE
-git checkout android-libraries-arm64-v8a
-LIBRARIES_FILE=$(ls -t | head -n 1) && tar xpzf $LIBRARIES_FILE
-git checkout android-libraries-x86_64
-LIBRARIES_FILE=$(ls -t | head -n 1) && tar xpzf $LIBRARIES_FILE
-mv nCine-android-external ..
-cd ..
-rm -rf nCine-libraries-artifacts
-```
+* Build dependencies will be downloaded automatically by **CMake**
+  * Can be disabled with `NCINE_DOWNLOAD_DEPENDENCIES` option, then download [build dependencies](https://github.com/deathkiller/jazz2-libraries) manually to `‹Repository›/Libs/`
 * Build the solution with **CMake**
   * Run `./BuildAndroid.sh` or `./BuildAndroid_x86-64` to build **APK** for Android
   * Run `./BuildAndroidSign.sh` to sign built **APKs**
     * Keystore file `Keystore.jks` must exist in repository root
+
+### Universal Windows Platform (Windows RT)
+* Build dependencies will be downloaded automatically by **CMake**
+  * Can be disabled with `NCINE_DOWNLOAD_DEPENDENCIES` option, then download [build dependencies](https://github.com/deathkiller/jazz2-libraries) manually to `‹Repository›/Libs/`
+* Run `.\BuildUwp.sh` to create [Microsoft Visual Studio 2019](https://www.visualstudio.com/) (or newer) solution
 
 
 ## License

@@ -1,0 +1,64 @@
+﻿#pragma once
+
+#include "../../ContentResolver.h"
+#include "../../PlayerActions.h"
+#include "../Alignment.h"
+
+namespace Jazz2::UI::Menu
+{
+	class MenuSection;
+
+	enum class ChangedPreferencesType {
+		None = 0x00,
+		Audio = 0x01,
+		Graphics = 0x02,
+		Gameplay = 0x04
+	};
+
+	DEFINE_ENUM_OPERATORS(ChangedPreferencesType);
+
+	class IMenuContainer
+	{
+	public:
+		static constexpr uint16_t MainLayer = 600;
+		static constexpr uint16_t ShadowLayer = 580;
+		static constexpr uint16_t BackgroundLayer = 550;
+		static constexpr uint16_t FontLayer = 700;
+		static constexpr uint16_t FontShadowLayer = 620;
+
+		template<typename T>
+		void SwitchToSection()
+		{
+			SwitchToSectionPtr(std::make_unique<T>());
+		}
+
+		virtual void SwitchToSectionPtr(std::unique_ptr<MenuSection> section) = 0;
+		virtual void LeaveSection() = 0;
+		virtual void ChangeLevel(Jazz2::LevelInitialization&& levelInit) = 0;
+		virtual void ApplyPreferencesChanges(ChangedPreferencesType type) = 0;
+		virtual bool ActionHit(PlayerActions action) = 0;
+
+		virtual Vector2i GetViewSize() = 0;
+		virtual void DrawElement(const StringView& name, int frame, float x, float y, uint16_t z, Alignment align,
+			const Colorf& color, float scaleX = 1.0f, float scaleY = 1.0f, bool additiveBlending = false) = 0;
+		virtual void DrawElement(const StringView& name, float x, float y, uint16_t z, Alignment align,
+			const Colorf& color, const Vector2f& size, const Vector4f& texCoords) = 0;
+		virtual void DrawSolid(float x, float y, uint16_t z, Alignment align, const Vector2f& size, const Colorf& color, bool additiveBlending = false) = 0;
+		virtual void DrawStringShadow(const StringView& text, int& charOffset, float x, float y, uint16_t z, Alignment align,
+			const Colorf& color, float scale = 1.0f, float angleOffset = 0.0f, float varianceX = 4.0f, float varianceY = 4.0f,
+			float speed = 0.4f, float charSpacing = 1.0f, float lineSpacing = 1.0f) = 0;
+		virtual void PlaySfx(const StringView& identifier, float gain = 1.0f) = 0;
+
+		static float EaseOutElastic(float t)
+		{
+			constexpr float p = 0.3f;
+			return powf(2.0f, -10.0f * t) * sinf((t - p / 4.0f) * (2.0f * fPi) / p) + 1.0f;
+		}
+
+		static float EaseOutCubic(float t)
+		{
+			float x = 1.0f - t;
+			return 1.0f - x * x * x;
+		}
+	};
+}
