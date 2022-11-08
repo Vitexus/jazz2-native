@@ -2,9 +2,9 @@ Source: jazz2-native
 Section: games
 Priority: optional
 Maintainer: Vítězslav Dvořák <info@vitexsoftware.cz>
-Build-Depends: cmake, 	debhelper-compat (= 12), libglfw3-dev, libgl1-mesa-dev
+Build-Depends: cmake, 	debhelper-compat (= 12), libglfw3-dev, libgl1-mesa-dev, libopenmpt-dev
 Standards-Version: 4.5.0
-Homepage: https://github.com/deathkiller/jazz2-native
+Homepage: http://deat.tk/jazz2/
 Vcs-Git: git@github.com:deathkiller/jazz2-native.git
 Vcs-Browser: https://github.com/deathkiller/jazz2-native
 
@@ -13,14 +13,25 @@ Architecture: any
 Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}, libglfw3, libopenal1, libopenmpt0 
 # libglew2.2,  ??
-Recommends: jazz2-data
+Recommends: jazz2-data | jazz2-data-shareware
 Description: Jazz² linux reimplementation
  Jazz² Resurrection: Native C++ reimplementation 
  of Jazz Jackrabbit 2 
 
 Package: jazz2-data
+Conflicts: jazz2-data-shareware
 Architecture: any
 Multi-Arch: foreign
-Depends: ${shlibs:Depends}, ${misc:Depends}, libglfw3, libopenal1, libopenmpt0 
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Original Jazz² data
  Jazz² Data Files Only for game owners!
+
+Package: jazz2-data-shareware
+Conflicts: jazz2-data
+Architecture: any
+Multi-Arch: foreign
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Jazz² demo data
+ Jazz² Shareware version Data
+
+
