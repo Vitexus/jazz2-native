@@ -1,0 +1,25 @@
+name: Ubuntu Packaging
+
+on:
+  release:
+    types: [published, created, edited]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@master
+      env: 
+        DEBIAN_FRONTEND: "noninteractive"
+    - name: Prepare Environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y aptitude pbuilder ubuntu-dev-tools apt-file debhelper
+    - name: Build Debian package
+      uses: dawidd6/action-debian-package@v1
+      with:
+        source_directory: .
+        artifacts_directory: dist
+        os_distribution: jammy
