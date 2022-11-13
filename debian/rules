@@ -1,0 +1,59 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+
+BuildType=Release
+#BuildType=Debug
+
+export DH_VERBOSE=1
+export COMPILE_FLAGS="-O0"
+export DEB_BUILD_MAINT_OPTIONS = hardening=-all
+export DEB_CFLAGS_MAINT_APPEND  = -Wno-error
+export DEB_LDFLAGS_MAINT_APPEND = -Wno-error
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+GIT_VERSION_JAZZ2 ?= $(shell git describe --tags --abbrev=0)
+GIT_COMMIT_JAZZ2 := $(shell git rev-parse --short HEAD)
+
+%:
+	dh $@ --buildsystem=cmake --builddirectory=obj-${DEB_HOST_MULTIARCH}
+
+#cmake -B ../Jazz2-LinuxGcc-${BuildType} -D CMAKE_BUILD_TYPE=${BuildType} -D CMAKE_PREFIX_PATH=$(pwd)/../nCine-external -D NCINE_LINKTIME_OPTIMIZATION=ON
+#make -j8 -C ../Jazz2-LinuxGcc-${BuildType}
+
+override_dh_auto_configure:
+	mkdir -p debian/tmp
+	cd debian/tmp
+	[ -d nCine-libraries-artifacts ] || git clone --branch libraries-linux-gcc https://github.com/nCine/nCine-libraries-artifacts.git
+	LIBRARIES_FILE=$$(ls -t nCine-libraries-artifacts | head -n 1) && tar xvpzf nCine-libraries-artifacts/$$LIBRARIES_FILE
+	cd ../..
+	dh_auto_configure -- \
+		-DNIGHTLY_BUILD=ON \
+		-DMO_LANG_DIR=/usr/share/locale \
+		-DCMAKE_BUILD_TYPE=${BuildType} \
+		-DNCPROJECT_DATA_DIR=obj-${DEB_HOST_MULTIARCH} \
+		-DCMAKE_PREFIX_PATH=$$(pwd)/nCine-external \
+		-DNCINE_LINKTIME_OPTIMIZATION=ON \
+		-DVERSION_NUM=${GIT_VERSION_JAZZ2} \
+		-DVERSION_SUFFIX=-${GIT_COMMIT_JAZZ2} \
+
+override_dh_auto_install:
+	cp -rv Content obj-${DEB_HOST_MULTIARCH}/Content
+# 	DESTDIR=$$(pwd)/debian/JAZZ2 cmake --install ./obj-${DEB_HOST_MULTIARCH}
+# 	for locale in $$(ls "Translations/*.po") ; do \
+# 	    echo mkdir /usr/share/locale/$$locale/LC_MESSAGES \
+# 	    echo msgfmt -o /usr/share/locale/$$locale/LC_MESSAGES/JAZZ2.mo Translations/$$locale .po  ; \
+# 	done
+	dh_auto_install
+	mkdir -p debian/jazz2-native/usr/share
+	mv debian/tmp/usr/share/*	debian/jazz2-native/usr/share
+	debian/mkico.sh
+	mkdir -p "debian/jazz2-data/usr/share/Jazz²\ Resurrection/Content"
+	[ -d debian/Content ] && cp -r debian/Content/* "debian/jazz2-data/usr/share/Jazz² Resurrection/Content" || true
+	mkdir -p "debian/jazz2-data-shareware/usr/share/Jazz²\ Resurrection/Content"
+	[ -d debian/sharewareContent ] && cp -r debian/sharewareContent/* "debian/jazz2-data-shareware/usr/share/Jazz² Resurrection/Content" || true
+	rm -f "debian/jazz2-data/usr/share/Jazz²\ Resurrection/Content/Vssver.scc"
+	rm -f "debian/jazz2-*/usr/share/Jazz²\ Resurrection/Content/jazz2.log"
+
+override_dh_shlibdeps:
+#    dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

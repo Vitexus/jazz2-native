@@ -1,0 +1,10 @@
+debian/io.github.deathkiller.jazz_resurrection.metainfo.xml /usr/share/metainfo
+debian/io.github.deathkiller.jazz_resurrection.desktop /usr/share/applications
+debian/jazz2 /usr/games
+
+obj-*-linux-gnu/jazz2	/usr/lib/games/jazz2-native
+
+# FIXME: :(
+
+nCine-external/lib/libGLEW.so.2.2.0 /usr/lib
+

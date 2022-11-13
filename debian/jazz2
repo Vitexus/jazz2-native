@@ -1,0 +1,6 @@
+#!/bin/bash
+
+/usr/lib/games/jazz2-native/jazz2 /bypass-cache
+
+
+

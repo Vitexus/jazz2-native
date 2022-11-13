@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+
+Name=Jazz² Resurrection
+Comment=Native C++ reimplementation of Jazz Jackrabbit 2 
+Categories=Game;ArcadeGame;
+
+Icon=jazz2-native
+Exec=jazz2
+Terminal=false
+
