@@ -48,12 +48,12 @@ override_dh_auto_install:
 	mkdir -p debian/jazz2-native/usr/share
 	mv debian/tmp/usr/share/*	debian/jazz2-native/usr/share
 	debian/mkico.sh
-	mkdir -p "debian/jazz2-data/usr/share/Jazz²\ Resurrection/Content"
+	mkdir -p "debian/jazz2-data/usr/share/Jazz² Resurrection/Content"
 	[ -d debian/Content ] && cp -r debian/Content/* "debian/jazz2-data/usr/share/Jazz² Resurrection/Content" || true
-	mkdir -p "debian/jazz2-data-shareware/usr/share/Jazz²\ Resurrection/Content"
+	mkdir -p "debian/jazz2-data-shareware/usr/share/Jazz² Resurrection/Content"
 	[ -d debian/sharewareContent ] && cp -r debian/sharewareContent/* "debian/jazz2-data-shareware/usr/share/Jazz² Resurrection/Content" || true
-	rm -f "debian/jazz2-data/usr/share/Jazz²\ Resurrection/Content/Vssver.scc"
-	rm -f "debian/jazz2-*/usr/share/Jazz²\ Resurrection/Content/jazz2.log"
+	rm -f "debian/jazz2-data/usr/share/Jazz² Resurrection/Content/Vssver.scc"
+	rm -f "debian/jazz2-*/usr/share/Jazz² Resurrection/Content/jazz2.log"
 
 override_dh_shlibdeps:
 #    dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
