@@ -54,6 +54,7 @@ override_dh_auto_install:
 	[ -d debian/sharewareContent ] && cp -r debian/sharewareContent/* "debian/jazz2-data-shareware/usr/share/Jazz² Resurrection/Content" || true
 	rm -f "debian/jazz2-data/usr/share/Jazz² Resurrection/Content/Vssver.scc"
 	rm -f "debian/jazz2-*/usr/share/Jazz² Resurrection/Content/jazz2.log"
+	rm -f "debian/jazz2-data-shareware/usr/share/Jazz² Resurrection/Content/Animations/Jazz/ledge_climb.aura"
 
 override_dh_shlibdeps:
 #    dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
