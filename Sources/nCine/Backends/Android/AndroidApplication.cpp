@@ -12,6 +12,10 @@
 
 namespace nc = nCine;
 
+#if defined(NCINE_LOG)
+std::unique_ptr<nCine::IFileStream> __logFile;
+#endif
+
 /// Processes the next application command
 void engine_handle_cmd(struct android_app* state, int32_t cmd)
 {
@@ -56,12 +60,12 @@ namespace nCine
 #endif
 
 			while ((ident = ALooper_pollAll(!theApplication().isSuspended() ? 0 : -1, nullptr, &events, reinterpret_cast<void**>(&source))) >= 0) {
-				if (source != nullptr)
+				if (source != nullptr) {
 					source->process(state, source);
-
-				if (ident == LOOPER_ID_USER)
+				}
+				if (ident == LOOPER_ID_USER) {
 					AndroidInputManager::parseAccelerometerEvent();
-
+				}
 				if (state->destroyRequested) {
 					LOGI("android_app->destroyRequested not equal to zero");
 					theApplication().quit();
@@ -72,8 +76,7 @@ namespace nCine
 			NuklearAndroidInput::inputEnd();
 #endif
 
-			if (theAndroidApplication().isInitialized() &&
-				theApplication().shouldSuspend() == false) {
+			if (theAndroidApplication().isInitialized() && !theApplication().shouldSuspend()) {
 				AndroidInputManager::updateJoystickConnections();
 				theApplication().step();
 			}
@@ -173,12 +176,12 @@ namespace nCine
 		}
 	}
 
-	unsigned int AndroidApplication::sdkVersion() const
+	unsigned int AndroidApplication::SdkVersion() const
 	{
 		unsigned int sdkVersion = 0;
 
 		if (isInitialized_)
-			sdkVersion = AndroidJniHelper::sdkVersion();
+			sdkVersion = AndroidJniHelper::SdkVersion();
 
 		return sdkVersion;
 	}
@@ -218,8 +221,20 @@ namespace nCine
 	{
 		profileStartTime_ = TimeStamp::now();
 
-		AndroidJniHelper::attachJVM(state_);
-		AssetFile::initAssetManager(state_);
+#if defined(NCINE_LOG)
+		// Try to open log file as early as possible
+		StringView externalPath = externalDataPath();
+		if (!externalPath.empty()) {
+			__logFile = fs::Open(fs::JoinPath(externalPath, "Jazz2.log"_s), FileAccessMode::Write);
+			if (!__logFile->IsOpened()) {
+				__logFile = nullptr;
+				LOGW("Cannot create log file, using Android log instead");
+			}
+		}
+#endif
+
+		AndroidJniHelper::AttachJVM(state_);
+		AssetFile::InitializeAssetManager(state_);
 
 		appEventHandler_ = createAppEventHandler_();
 		// Only `onPreInit()` can modify the application configuration
@@ -255,7 +270,7 @@ namespace nCine
 
 	void AndroidApplication::shutdown()
 	{
-		AndroidJniHelper::detachJVM();
+		AndroidJniHelper::DetachJVM();
 		Application::shutdownCommon();
 		isInitialized_ = false;
 	}
@@ -275,5 +290,4 @@ namespace nCine
 			}
 		}
 	}
-
 }

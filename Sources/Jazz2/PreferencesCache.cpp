@@ -8,6 +8,8 @@
 #include "../nCine/IO/MemoryFile.h"
 #include "../nCine/IO/FileSystem.h"
 
+#include <Environment.h>
+
 using namespace Death::Containers::Literals;
 
 namespace Jazz2
@@ -24,10 +26,10 @@ namespace Jazz2
 	bool PreferencesCache::EnableReforged = true;
 	bool PreferencesCache::EnableLedgeClimb = true;
 	bool PreferencesCache::EnableWeaponWheel = true;
-#if defined(DEATH_TARGET_WINDOWS_RT)
-	bool PreferencesCache::EnableRgbLights = false;
-#else
+#if !defined(DEATH_TARGET_ANDROID) && !defined(DEATH_TARGET_IOS) && !defined(DEATH_TARGET_WINDOWS_RT)
 	bool PreferencesCache::EnableRgbLights = true;
+#else
+	bool PreferencesCache::EnableRgbLights = false;
 #endif
 	bool PreferencesCache::AllowUnsignedScripts = true;
 #if defined(DEATH_TARGET_ANDROID)
@@ -112,7 +114,13 @@ namespace Jazz2
 						MemoryFile uc(uncompressedBuffer.get(), uncompressedSize);
 
 						BoolOptions boolOptions = (BoolOptions)uc.ReadValue<uint64_t>();
-#if !defined(DEATH_TARGET_ANDROID) && !defined(DEATH_TARGET_EMSCRIPTEN) && !defined(DEATH_TARGET_IOS)
+
+#if defined(DEATH_TARGET_WINDOWS_RT)
+						// Xbox is always fullscreen
+						if (Environment::CurrentDeviceType != DeviceType::Xbox) {
+							EnableFullscreen = ((boolOptions & BoolOptions::EnableFullscreen) == BoolOptions::EnableFullscreen);
+						}
+#elif !defined(DEATH_TARGET_ANDROID) && !defined(DEATH_TARGET_EMSCRIPTEN) && !defined(DEATH_TARGET_IOS)
 						EnableFullscreen = ((boolOptions & BoolOptions::EnableFullscreen) == BoolOptions::EnableFullscreen);
 #endif
 						ShowPerformanceMetrics = ((boolOptions & BoolOptions::ShowPerformanceMetrics) == BoolOptions::ShowPerformanceMetrics);

@@ -711,7 +711,7 @@ namespace nCine
 	bool AndroidInputManager::isDeviceConnected(int deviceId)
 	{
 		AndroidJniClass_InputDevice inputDevice = AndroidJniClass_InputDevice::getDevice(deviceId);
-		return !inputDevice.isNull();
+		return !inputDevice.IsNull();
 	}
 
 	void AndroidInputManager::deviceInfo(int deviceId, int joyId)
@@ -720,7 +720,7 @@ namespace nCine
 		char deviceInfoString[MaxStringLength];
 
 		AndroidJniClass_InputDevice inputDevice = AndroidJniClass_InputDevice::getDevice(deviceId);
-		if (!inputDevice.isNull()) {
+		if (!inputDevice.IsNull()) {
 			auto& joystick = joystickStates_[joyId];
 
 			// InputDevice.getName()
@@ -735,7 +735,7 @@ namespace nCine
 			constexpr int maxButtons = AndroidJoystickState::MaxButtons;
 			int numFoundButtons = 0;
 			bool checkedButtons[maxButtons];
-			if (__ANDROID_API__ >= 19 && AndroidJniHelper::sdkVersion() >= 19) {
+			if (__ANDROID_API__ >= 19 && AndroidJniHelper::SdkVersion() >= 19) {
 				int buttonsToCheck[maxButtons];
 				for (int i = 0; i < maxButtons - 1; i++) {
 					buttonsToCheck[i] = AKEYCODE_BUTTON_A + i;
@@ -758,14 +758,14 @@ namespace nCine
 			};
 
 			int buttonMask = 0;
-#if defined(ENABLE_LOG)
+#if defined(NCINE_LOG)
 			std::memset(deviceInfoString, 0, MaxStringLength);
 #endif
 			for (int i = 0; i < maxButtons; i++) {
 				bool hasKey = false;
 				const int keyCode = (i < maxButtons - 1) ? AKEYCODE_BUTTON_A + i : AKEYCODE_BACK;
 
-				if (__ANDROID_API__ >= 19 && AndroidJniHelper::sdkVersion() >= 19) {
+				if (__ANDROID_API__ >= 19 && AndroidJniHelper::SdkVersion() >= 19) {
 					hasKey = checkedButtons[i];
 				} else { // KeyCharacterMap.deviceHasKey()
 					hasKey = AndroidJniClass_KeyCharacterMap::deviceHasKey(keyCode);
@@ -773,7 +773,7 @@ namespace nCine
 
 				if (hasKey) {
 					joystick.buttonsMapping_[i] = (int)ButtonNames[i];
-#if defined(ENABLE_LOG)
+#if defined(NCINE_LOG)
 					sprintf(&deviceInfoString[strlen(deviceInfoString)], "%d:%d ", (int)ButtonNames[i], keyCode);
 #endif
 					buttonMask |= ButtonMasks[i];
@@ -783,12 +783,12 @@ namespace nCine
 				}
 			}
 			joystick.numButtons_ = numFoundButtons;
-#if defined(ENABLE_LOG)
+#if defined(NCINE_LOG)
 			LOGV_X("Device (%d, %d) - Buttons %s", deviceId, joyId, deviceInfoString);
 #endif
 
 			joystick.hasDPad_ = true;
-			if (__ANDROID_API__ >= 19 && AndroidJniHelper::sdkVersion() >= 19) {
+			if (__ANDROID_API__ >= 19 && AndroidJniHelper::SdkVersion() >= 19) {
 				int buttonsToCheck[4];
 				for (int i = 0; i < _countof(buttonsToCheck); i++) {
 					buttonsToCheck[i] = AKEYCODE_DPAD_UP + i;
@@ -815,7 +815,7 @@ namespace nCine
 				}
 			}
 
-#if defined(ENABLE_LOG)
+#if defined(NCINE_LOG)
 			std::memset(deviceInfoString, 0, MaxStringLength);
 #endif
 			joystick.hasHatAxes_ = true;
@@ -825,9 +825,9 @@ namespace nCine
 				const int axis = AndroidJoystickState::AxesToMap[i];
 				AndroidJniClass_MotionRange motionRange = inputDevice.getMotionRange(axis);
 
-				if (!motionRange.isNull()) {
+				if (!motionRange.IsNull()) {
 					joystick.axesMapping_[numAxes] = axis;
-#if defined(ENABLE_LOG)
+#if defined(NCINE_LOG)
 					sprintf(&deviceInfoString[strlen(deviceInfoString)], "%d:%d ", numAxes, axis);
 #endif
 					numAxes++;
@@ -838,7 +838,7 @@ namespace nCine
 					}
 				}
 			}
-#if defined(ENABLE_LOG)
+#if defined(NCINE_LOG)
 			LOGV_X("Device (%d, %d) - Axes %s", deviceId, joyId, deviceInfoString);
 #endif
 			joystick.numAxes_ = numAxes;

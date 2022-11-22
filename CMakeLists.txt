@@ -4,7 +4,7 @@ project(Jazz2)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 get_filename_component(PARENT_SOURCE_DIR ${CMAKE_SOURCE_DIR} DIRECTORY)
 
-message(STATUS "Compiling for architecture: ${CMAKE_SYSTEM_PROCESSOR} (${CMAKE_GENERATOR_PLATFORM})")
+message(STATUS "Compiling for architecture: ${CMAKE_GENERATOR_PLATFORM} (${CMAKE_SYSTEM_PROCESSOR})")
 string(FIND ${CMAKE_SYSTEM_PROCESSOR} "arm" ARM_SUBSTRING_FOUND)
 string(FIND ${CMAKE_SYSTEM_PROCESSOR} "aarch64" AARCH64_SUBSTRING_FOUND)
 if (ARM_SUBSTRING_FOUND GREATER -1 OR AARCH64_SUBSTRING_FOUND GREATER -1)
@@ -17,7 +17,7 @@ set(NCINE_REVERSE_DNS "jazz2.resurrection")
 set(NCINE_APP_NAME "Jazz² Resurrection")
 set(NCINE_APP_DESCRIPTION "Open-source reimplementation of Jazz Jackrabbit 2")
 set(NCINE_APP_VENDOR "Dan R.")
-set(NCINE_VERSION "1.1.0")
+set(NCINE_VERSION "1.2.0")
 
 include(ncine_options)
 

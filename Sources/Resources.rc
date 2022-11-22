@@ -13,9 +13,6 @@
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
-/////////////////////////////////////////////////////////////////////////////
-// Neutrální (výchozí) resources
-
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
 LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
 
@@ -25,8 +22,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
 //
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION 1, 1, 0, 0
-PRODUCTVERSION 1, 1, 0, 0
+FILEVERSION 1, 2, 0, 0
+PRODUCTVERSION 1, 2, 0, 0
 FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
 FILEFLAGS 0x1L
@@ -42,12 +39,12 @@ BEGIN
 BLOCK "000004b0"
 BEGIN
 VALUE "CompanyName", "Dan R."
-VALUE "FileVersion", "1.1.0.0"
+VALUE "FileVersion", "1.2.0.0"
 VALUE "InternalName", "Jazz2"
 VALUE "LegalCopyright", "© 2016-2022 Dan R."
 VALUE "OriginalFilename", "Jazz2.exe"
 VALUE "ProductName", "Jazz² Resurrection"
-VALUE "ProductVersion", "1.1.0.0"
+VALUE "ProductVersion", "1.2.0.0"
 VALUE "FileDescription", "Jazz² Resurrection: Open-source reimplementation of Jazz Jackrabbit 2"
 END
 END
@@ -56,7 +53,6 @@ BEGIN
 VALUE "Translation", 0x0, 1200
 END
 END
-
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -83,7 +79,6 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon
@@ -93,9 +88,7 @@ END
 // remains consistent on all systems.
 GLFW_ICON           ICON                    ".\\Icons\\Main.ico"
 
-
-#endif    // Neutrální (výchozí) resources
-/////////////////////////////////////////////////////////////////////////////
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // Neutral resources
@@ -108,12 +101,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
 // String Table
 //
 
-
-#endif    // Neutral resources
-/////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////
-// Čeština (Česká republika) resources
+#endif
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CSY)
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -123,11 +111,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 // String Table
 //
 
-
-#endif    // Čeština (Česká republika) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
+#endif
 
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

@@ -9,6 +9,16 @@ endif()
 
 target_compile_definitions(ncine PUBLIC "CMAKE_BUILD")
 target_compile_definitions(ncine PUBLIC "$<$<CONFIG:Debug>:NCINE_DEBUG>")
+if(NCINE_LOG)
+	target_compile_definitions(ncine PUBLIC "NCINE_LOG")
+	message(STATUS "Runtime logging is enabled")
+else()
+	message(STATUS "Runtime logging is disabled")
+endif()
+if(NCINE_WORKAROUND_DISABLE_BATCHING)
+	target_compile_definitions(ncine PUBLIC "NCINE_WORKAROUND_DISABLE_BATCHING")
+	message(STATUS "Force disable batching for rendering is active")
+endif()
 
 if(WIN32)
 	# Enable Win32 executable and force Unicode mode on Windows

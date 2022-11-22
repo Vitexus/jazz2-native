@@ -235,6 +235,7 @@ namespace Jazz2
 		GenericGraphicResource* RequestGraphics(const StringView& path, uint16_t paletteOffset);
 
 		std::unique_ptr<Tiles::TileSet> RequestTileSet(const StringView& path, uint16_t captionTileId, bool applyPalette);
+		bool LevelExists(const StringView& episodeName, const StringView& levelName);
 		bool LoadLevel(LevelHandler* levelHandler, const StringView& path, GameDifficulty difficulty);
 		void ApplyDefaultPalette();
 
@@ -253,6 +254,8 @@ namespace Jazz2
 		StringView GetContentPath() const {
 #if defined(DEATH_TARGET_UNIX) || defined(DEATH_TARGET_WINDOWS_RT)
 			return _contentPath;
+#elif defined(DEATH_TARGET_ANDROID)
+			return "asset::"_s;
 #else
 			return "Content/"_s;
 #endif
@@ -286,7 +289,7 @@ namespace Jazz2
 		GenericGraphicResource* RequestGraphicsAura(const StringView& path, uint16_t paletteOffset);
 		static void ReadImageFromFile(std::unique_ptr<IFileStream>& s, uint8_t* data, int width, int height, int channelCount);
 		void RecreateGemPalettes();
-#if NCINE_DEBUG
+#if defined(NCINE_DEBUG)
 		void MigrateGraphics(const StringView& path);
 #endif
 

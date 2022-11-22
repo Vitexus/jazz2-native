@@ -17,7 +17,6 @@
 #include "nCine/Input/IInputEventHandler.h"
 #include "nCine/IO/FileSystem.h"
 #include "nCine/Threading/Thread.h"
-#include "nCine/tracy.h"
 
 #include "Jazz2/IRootController.h"
 #include "Jazz2/ContentResolver.h"
@@ -26,6 +25,7 @@
 #include "Jazz2/UI/Cinematics.h"
 #include "Jazz2/UI/ControlScheme.h"
 #include "Jazz2/UI/Menu/MainMenu.h"
+#include "Jazz2/UI/Menu/SimpleMessageSection.h"
 
 #include "Jazz2/Compatibility/JJ2Anims.h"
 #include "Jazz2/Compatibility/JJ2Episode.h"
@@ -43,148 +43,6 @@
 using namespace nCine;
 using namespace Jazz2;
 using namespace Jazz2::UI;
-
-#if defined(ENABLE_LOG)
-
-#if defined(DEATH_TARGET_WINDOWS)
-#	include <Utf8.h>
-#elif defined(DEATH_TARGET_ANDROID)
-#	include <stdarg.h>
-#	include <android/log.h>
-#else
-#	include <cstdarg>
-#endif
-
-void __WriteLog(LogLevel level, const char* fmt, ...)
-{
-	constexpr int MaxEntryLength = 4 * 1024;
-	char logEntry[MaxEntryLength];
-
-#if defined(DEATH_TARGET_WINDOWS)
-	logEntry[0] = '[';
-	switch (level) {
-		case LogLevel::Fatal:		logEntry[1] = 'F'; break;
-		case LogLevel::Error:		logEntry[1] = 'E'; break;
-		case LogLevel::Warn:		logEntry[1] = 'W'; break;
-		case LogLevel::Info:		logEntry[1] = 'I'; break;
-		default:					logEntry[1] = 'D'; break;
-	}
-	logEntry[2] = ']';
-	logEntry[3] = ' ';
-
-	va_list args;
-	va_start(args, fmt);
-	unsigned int length = vsnprintf(logEntry + 4, MaxEntryLength - 4, fmt, args) + 4;
-	va_end(args);
-
-	if (length >= MaxEntryLength - 2) {
-		length = MaxEntryLength - 2;
-	}
-
-	logEntry[length++] = '\n';
-	logEntry[length] = '\0';
-
-	::OutputDebugString(Death::Utf8::ToUtf16(logEntry));
-#elif defined(DEATH_TARGET_ANDROID)
-	android_LogPriority priority;
-
-	// clang-format off
-	switch (level) {
-		case LogLevel::Fatal:		priority = ANDROID_LOG_FATAL; break;
-		case LogLevel::Error:		priority = ANDROID_LOG_ERROR; break;
-		case LogLevel::Warn:		priority = ANDROID_LOG_WARN; break;
-		case LogLevel::Info:		priority = ANDROID_LOG_INFO; break;
-		case LogLevel::Debug:		priority = ANDROID_LOG_DEBUG; break;
-		case LogLevel::Verbose:		priority = ANDROID_LOG_VERBOSE; break;
-		case LogLevel::Unknown:		priority = ANDROID_LOG_UNKNOWN; break;
-		default:					priority = ANDROID_LOG_UNKNOWN; break;
-	}
-	// clang-format on
-
-	va_list args;
-	va_start(args, fmt);
-	/*unsigned int length =*/ vsnprintf(logEntry, MaxEntryLength, fmt, args);
-	va_end(args);
-
-	__android_log_write(priority, "jazz2", logEntry);
-#else
-	constexpr char Reset[] = "\033[0m";
-	constexpr char Bold[] = "\033[1m";
-	constexpr char Faint[] = "\033[2m";
-	//constexpr char Black[] = "\033[30m";
-	//constexpr char BrightRed[] = "\033[91m";
-	//constexpr char BrightGreen[] = "\033[92m";
-	//constexpr char BrightYellow[] = "\033[93m";
-	//constexpr char BrightRedBg[] = "\033[101m";
-
-	char logEntryWithColors[MaxEntryLength];
-	logEntryWithColors[0] = '\0';
-	logEntryWithColors[MaxEntryLength - 1] = '\0';
-
-	va_list args;
-	va_start(args, fmt);
-	unsigned int length = vsnprintf(logEntry, MaxEntryLength, fmt, args);
-	va_end(args);
-
-	// Colorize the output
-	unsigned int length2 = snprintf(logEntryWithColors, MaxEntryLength - 1, "%s", Faint);
-
-	unsigned int logMsgFuncLength = 0;
-	while (logEntry[logMsgFuncLength] != '\0' && (logMsgFuncLength == 0 || !(logEntry[logMsgFuncLength - 1] == '-' && logEntry[logMsgFuncLength] == '>'))) {
-		logMsgFuncLength++;
-	}
-	logMsgFuncLength++; // Skip '>' character
-
-	strncpy(logEntryWithColors + length2, logEntry, std::min(logMsgFuncLength, MaxEntryLength - length2 - 1));
-	length2 += logMsgFuncLength;
-
-	length2 += snprintf(logEntryWithColors + length2, MaxEntryLength - length2 - 1, "%s", Reset);
-
-	if (level == LogLevel::Warn || level == LogLevel::Error || level == LogLevel::Fatal) {
-		length2 += snprintf(logEntryWithColors + length2, MaxEntryLength - length2 - 1, "%s", Bold);
-	}
-
-	strncpy(logEntryWithColors + length2, logEntry + logMsgFuncLength, std::min(length - logMsgFuncLength, MaxEntryLength - length2 - 1));
-	length2 += length - logMsgFuncLength;
-
-	if (level == LogLevel::Warn || level == LogLevel::Error || level == LogLevel::Fatal) {
-		length2 += snprintf(logEntryWithColors + length2, MaxEntryLength - length2 - 1, "%s", Reset);
-	}
-
-	if (length2 >= MaxEntryLength - 2) {
-		length2 = MaxEntryLength - 2;
-	}
-
-	logEntryWithColors[length2++] = '\n';
-	logEntryWithColors[length2] = '\0';
-
-	if (level == LogLevel::Error || level == LogLevel::Fatal) {
-		fputs(logEntryWithColors, stderr);
-	} else {
-		fputs(logEntryWithColors, stdout);
-	}
-#endif
-
-#if defined(WITH_TRACY)
-	uint32_t color = 0x999999;
-	// clang-format off
-	switch (level) {
-		case LogLevel::Fatal:		color = 0xec3e40; break;
-		case LogLevel::Error:		color = 0xff9b2b; break;
-		case LogLevel::Warn:		color = 0xf5d800; break;
-		case LogLevel::Info:		color = 0x01a46d; break;
-		case LogLevel::Debug:		color = 0x377fc7; break;
-		case LogLevel::Verbose:		color = 0x73a5d7; break;
-		case LogLevel::Unknown:		color = 0x999999; break;
-		default:					color = 0x999999; break;
-	}
-	// clang-format on
-
-	TracyMessageC(logEntry, length, color);
-#endif
-}
-
-#endif
 
 enum class PendingState {
 	None,
@@ -337,6 +195,8 @@ void GameEventHandler::onInit()
 	Viewport::chain().clear();
 	Vector2i res = theApplication().resolutionInt();
 	_currentHandler->OnInitializeViewport(res.X, res.Y);
+
+	LOGI_X("Rendering resolution: %ix%i", res.X, res.Y);
 }
 
 void GameEventHandler::onFrameStart()
@@ -403,6 +263,17 @@ void GameEventHandler::onFrameStart()
 #endif
 					_currentHandler = std::make_unique<LevelHandler>(this, *_pendingLevelChange.get());
 				}
+
+				if (auto levelHandler = dynamic_cast<LevelHandler*>(_currentHandler.get())) {
+					if (!levelHandler->IsLoaded()) {
+						// If level cannot be loaded, go back to main menu
+						_currentHandler = std::make_unique<Menu::MainMenu>(this, false);
+						if (auto mainMenu = dynamic_cast<Menu::MainMenu*>(_currentHandler.get())) {
+							mainMenu->SwitchToSection<Menu::SimpleMessageSection>(Menu::SimpleMessageSection::Message::CannotLoadLevel);
+						}
+					}
+				}
+
 				_pendingLevelChange = nullptr;
 				break;
 		}
@@ -438,6 +309,8 @@ void GameEventHandler::onResizeWindow(int width, int height)
 	}
 
 	PreferencesCache::EnableFullscreen = theApplication().gfxDevice().isFullscreen();
+
+	LOGI_X("Rendering resolution: %ix%i", width, height);
 }
 
 void GameEventHandler::onKeyPressed(const KeyboardEvent& event)
@@ -776,21 +649,21 @@ void GameEventHandler::RefreshCacheLevels()
 
 void GameEventHandler::CheckUpdates()
 {
-#if !NCINE_DEBUG
+#if !defined(NCINE_DEBUG)
 #if defined(DEATH_TARGET_ANDROID)
-	auto sdkVersion = AndroidJniHelper::sdkVersion();
-	auto androidId = AndroidJniWrap_Secure::androidId();
+	auto sdkVersion = AndroidJniHelper::SdkVersion();
+	auto androidId = AndroidJniWrap_Secure::AndroidId();
 	char DeviceDesc[64];
-	int DeviceDescLength = formatString(DeviceDesc, _countof(DeviceDesc), "%s|Android %i|", androidId.data(), sdkVersion);
+	int DeviceDescLength = formatString(DeviceDesc, _countof(DeviceDesc), "%s|Android %i||2", androidId.data(), sdkVersion);
 #elif defined(DEATH_TARGET_APPLE)
 	char DeviceDesc[64]; int DeviceDescLength;
-	if (::gethostname(DeviceDesc, _countof(DeviceDesc) - (sizeof("|macOS|") - 1)) == 0) {
+	if (::gethostname(DeviceDesc, _countof(DeviceDesc) - (sizeof("|macOS||5") - 1)) == 0) {
 		DeviceDescLength = strlen(DeviceDesc);
 	} else {
 		DeviceDescLength = 0;
 	}
-	std::memcpy(DeviceDesc + DeviceDescLength, "|macOS|", sizeof("|macOS|") - 1);
-	DeviceDescLength += sizeof("|macOS|") - 1;
+	std::memcpy(DeviceDesc + DeviceDescLength, "|macOS||5", sizeof("|macOS||5") - 1);
+	DeviceDescLength += sizeof("|macOS||5") - 1;
 #elif defined(DEATH_TARGET_UNIX)
 	char DeviceDesc[64]; int DeviceDescLength;
 	if (::gethostname(DeviceDesc, _countof(DeviceDesc)) == 0) {
@@ -799,8 +672,9 @@ void GameEventHandler::CheckUpdates()
 		DeviceDescLength = 0;
 	}
 	String unixVersion = Environment::GetUnixVersion();
-	DeviceDescLength += formatString(DeviceDesc + DeviceDescLength, _countof(DeviceDesc) - DeviceDescLength, "|%s|", unixVersion.empty() ? "Unix" : unixVersion.data());
-#elif defined(DEATH_TARGET_WINDOWS)
+	DeviceDescLength += formatString(DeviceDesc + DeviceDescLength, _countof(DeviceDesc) - DeviceDescLength, "|%s||4",
+		unixVersion.empty() ? "Unix" : unixVersion.data());
+#elif defined(DEATH_TARGET_WINDOWS) || defined(DEATH_TARGET_WINDOWS_RT)
 	auto osVersion = Environment::WindowsVersion;
 	char DeviceDesc[64]; DWORD DeviceDescLength = _countof(DeviceDesc);
 	if (!::GetComputerNameA(DeviceDesc, &DeviceDescLength)) {
@@ -816,12 +690,17 @@ void GameEventHandler::CheckUpdates()
 		case DeviceType::Xbox: deviceType = "Xbox"; break;
 		default: deviceType = "Unknown"; break;
 	}
-	DeviceDescLength += formatString(DeviceDesc + DeviceDescLength, _countof(DeviceDesc) - DeviceDescLength, "|Windows %i.%i.%i (%s)|", (int)((osVersion >> 48) & 0xffffu), (int)((osVersion >> 32) & 0xffffu), (int)(osVersion & 0xffffffffu), deviceType);
+	DeviceDescLength += formatString(DeviceDesc + DeviceDescLength, _countof(DeviceDesc) - DeviceDescLength, "|Windows %i.%i.%i (%s)||7",
+		(int)((osVersion >> 48) & 0xffffu), (int)((osVersion >> 32) & 0xffffu), (int)(osVersion & 0xffffffffu), deviceType);
 #else
-	DeviceDescLength += formatString(DeviceDesc + DeviceDescLength, _countof(DeviceDesc) - DeviceDescLength, "|Windows %i.%i.%i|", (int)((osVersion >> 48) & 0xffffu), (int)((osVersion >> 32) & 0xffffu), (int)(osVersion & 0xffffffffu));
+	HMODULE hNtdll = ::GetModuleHandle(L"ntdll.dll");
+	bool isWine = (hNtdll != nullptr && ::GetProcAddress(hNtdll, "wine_get_host_version") != nullptr);
+	DeviceDescLength += formatString(DeviceDesc + DeviceDescLength, _countof(DeviceDesc) - DeviceDescLength,
+		isWine ? "|Windows %i.%i.%i (Wine)||3" : "|Windows %i.%i.%i||3",
+		(int)((osVersion >> 48) & 0xffffu), (int)((osVersion >> 32) & 0xffffu), (int)(osVersion & 0xffffffffu));
 #endif
 #else
-	constexpr char DeviceDesc[] = "||"; int DeviceDescLength = sizeof(DeviceDesc) - 1;
+	constexpr char DeviceDesc[] = "|||"; int DeviceDescLength = sizeof(DeviceDesc) - 1;
 #endif
 
 #if defined(DEATH_TARGET_ANDROID)
