@@ -15,7 +15,7 @@
 #		ifdef WITH_AUDIO
 #			pragma comment(lib, "../Libs/Windows/x64/OpenAL32.lib")
 #		endif
-#       pragma comment(lib, "../Libs/Windows/x64/libdeflate.lib")
+#		pragma comment(lib, "../Libs/Windows/x64/libdeflate.lib")
 #	elif defined(_M_IX86)
 #		ifdef WITH_GLEW
 #			pragma comment(lib, "../Libs/Windows/x86/glew32.lib")
@@ -29,7 +29,7 @@
 #		ifdef WITH_AUDIO
 #			pragma comment(lib, "../Libs/Windows/x86/OpenAL32.lib")
 #		endif
-#       pragma comment(lib, "../Libs/Windows/x86/libdeflate.lib")
+#		pragma comment(lib, "../Libs/Windows/x86/libdeflate.lib")
 #	else
 #		error Unsupported architecture
 #	endif
@@ -298,24 +298,37 @@ namespace nCine
 
 		renderingSettings_.windowScaling = appCfg_.windowScaling;
 
-#if defined(NCINE_WORKAROUND_DISABLE_BATCHING)
-		LOGW("Force disable batching for rendering (NCINE_WORKAROUND_DISABLE_BATCHING)");
-		renderingSettings_.batchingEnabled = false;
-#endif
+		//LOGI_X("Data path: \"%s\"", fs::GetDataPath().data());
 
 		theServiceLocator().registerIndexer(std::make_unique<ArrayIndexer>());
 #if defined(WITH_AUDIO)
-		if (appCfg_.withAudio)
+		if (appCfg_.withAudio) {
 			theServiceLocator().registerAudioDevice(std::make_unique<ALAudioDevice>());
+		}
 #endif
 #if defined(WITH_THREADS)
-		if (appCfg_.withThreads)
+		if (appCfg_.withThreads) {
 			theServiceLocator().registerThreadPool(std::make_unique<ThreadPool>());
+		}
 #endif
 		theServiceLocator().registerGfxCapabilities(std::make_unique<GfxCapabilities>());
-		GLDebug::init(theServiceLocator().gfxCapabilities());
+		const auto& gfxCapabilities = theServiceLocator().gfxCapabilities();
+		GLDebug::init(gfxCapabilities);
 
-		LOGI_X("Data path: \"%s\"", fs::GetDataPath().data());
+#if defined(DEATH_TARGET_ANDROID) && !(defined(WITH_FIXED_BATCH_SIZE) && WITH_FIXED_BATCH_SIZE > 0)
+		const StringView vendor = gfxCapabilities.glInfoStrings().vendor;
+		const StringView renderer = gfxCapabilities.glInfoStrings().renderer;
+		// Some GPUs doesn't work with dynamic batch size, so disable it for now
+		if (vendor == "Imagination Technologies"_s && renderer == "PowerVR Rogue GE8300"_s) {
+			const StringView vendorPrefix = vendor.findOr(' ', vendor.end());
+			if (renderer.hasPrefix(vendor.prefix(vendorPrefix.begin()))) {
+				LOGW_X("Detected %s: Using fixed batch size", renderer.data());
+			} else {
+				LOGW_X("Detected %s %s: Using fixed batch size", vendor.data(), renderer.data());
+			}
+			appCfg_.fixedBatchSize = 10;
+		}
+#endif
 
 #if defined(WITH_RENDERDOC)
 		RenderDocCapture::init();
@@ -476,7 +489,7 @@ namespace nCine
 	void Application::suspend()
 	{
 		frameTimer_->suspend();
-		if (appEventHandler_) {
+		if (appEventHandler_ != nullptr) {
 			appEventHandler_->onSuspend();
 		}
 		LOGI("IAppEventHandler::onSuspend() invoked");
@@ -484,7 +497,7 @@ namespace nCine
 
 	void Application::resume()
 	{
-		if (appEventHandler_) {
+		if (appEventHandler_ != nullptr) {
 			appEventHandler_->onResume();
 		}
 		const TimeStamp suspensionDuration = frameTimer_->resume();

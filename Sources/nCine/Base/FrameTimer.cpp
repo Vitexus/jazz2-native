@@ -13,7 +13,8 @@ namespace nCine
 	 *  seconds and writes to the log every `logInterval` seconds. */
 	FrameTimer::FrameTimer(float logInterval, float avgInterval)
 		: logInterval_(logInterval), avgInterval_(avgInterval), lastAvgUpdate_(TimeStamp::now()),
-		totNumFrames_(0L), avgNumFrames_(0L), logNumFrames_(0L), fps_(0.0f)
+		totNumFrames_(0L), avgNumFrames_(0L), logNumFrames_(0L), fps_(0.0f),
+		timeMult_(1.0f), timeMultPrev_(1.0f)
 	{
 	}
 
@@ -32,6 +33,11 @@ namespace nCine
 		avgNumFrames_++;
 		logNumFrames_++;
 
+		// Smooth out time multiplier using last 2 frames to prevent microstuttering
+		float timeMultPrev = timeMult_;
+		timeMult_ = (timeMultPrev_ + timeMultPrev_ + timeMult_ + (std::min(frameInterval_, SecondsPerFrame * 2) / SecondsPerFrame)) * 0.25f;
+		timeMultPrev_ = timeMultPrev;
+
 		// Update the FPS average calculation every `avgInterval_` seconds
 		const float secsSinceLastAvgUpdate = (frameStart_ - lastAvgUpdate_).seconds();
 		if (avgInterval_ > 0.0f && secsSinceLastAvgUpdate > avgInterval_) {
@@ -45,9 +51,10 @@ namespace nCine
 		// Log number of frames and FPS every `logInterval_` seconds
 		if (logInterval_ > 0.0f && avgNumFrames_ != 0 && secsSinceLastLogUpdate > logInterval_) {
 			fps_ = static_cast<float>(logNumFrames_) / logInterval_;
+#if defined(NCINE_LOG) && defined(NCINE_DEBUG)
 			const float msPerFrame = (logInterval_ * 1000.0f) / static_cast<float>(logNumFrames_);
 			LOGV_X("%lu frames in %.0f seconds = %f FPS (%.3fms per frame)", logNumFrames_, logInterval_, fps_, msPerFrame);
-
+#endif
 			logNumFrames_ = 0L;
 			lastLogUpdate_ = frameStart_;
 		}
@@ -66,10 +73,5 @@ namespace nCine
 		lastLogUpdate_ += suspensionDuration;
 
 		return suspensionDuration;
-	}
-
-	float FrameTimer::timeMult() const
-	{
-		return (std::min(frameInterval_, SecondsPerFrame * 2) / SecondsPerFrame);
 	}
 }

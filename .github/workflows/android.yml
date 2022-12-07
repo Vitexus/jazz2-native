@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  Build:
     strategy:
       fail-fast: false
       matrix:
@@ -78,18 +78,18 @@ jobs:
         path: ./_package/
 
   # Testing builds with workarounds
-  workarounds:
+  Workarounds:
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
         - BuildType: Release
           DisplayName: ARM
-          WorkaroundSwitch: NCINE_WORKAROUND_DISABLE_BATCHING
+          WorkaroundSwitch: WITH_FIXED_BATCH_SIZE
 
         - BuildType: Release
           DisplayName: x86-64
-          WorkaroundSwitch: NCINE_WORKAROUND_DISABLE_BATCHING
+          WorkaroundSwitch: WITH_FIXED_BATCH_SIZE
 
     runs-on: 'ubuntu-latest'
 
@@ -114,7 +114,7 @@ jobs:
           * ) exit 1 ;;
         esac
         
-        cmake -B ./_build/ -D CMAKE_BUILD_TYPE=${{ matrix.BuildType }} -D NCINE_LINKTIME_OPTIMIZATION=ON -D NCINE_BUILD_ANDROID=ON -D NCINE_ASSEMBLE_APK=ON -D NCINE_UNIVERSAL_APK="$universalApk" -D NCINE_NDK_ARCHITECTURES="$architecture" -D ${{ matrix.WorkaroundSwitch }}=ON
+        cmake -B ./_build/ -D CMAKE_BUILD_TYPE=${{ matrix.BuildType }} -D NCINE_LINKTIME_OPTIMIZATION=ON -D NCINE_BUILD_ANDROID=ON -D NCINE_ASSEMBLE_APK=ON -D NCINE_UNIVERSAL_APK="$universalApk" -D NCINE_NDK_ARCHITECTURES="$architecture" -D NCINE_WITH_FIXED_BATCH_SIZE=10
 
     - name: 'Build'
       run: |
@@ -139,11 +139,11 @@ jobs:
         
         echo '${{ secrets.ANDROID_KEYSTORE_FILE }}' | base64 --decode > ./_keystore.jks
         mkdir ./_package/
-        $ANDROID_HOME/build-tools/29.0.3/zipalign -p 4 "./_build/android/app/build/outputs/apk/$buildDir/$filename" "./_package/Jazz2_Debug.apk"
-        $ANDROID_HOME/build-tools/29.0.3/apksigner sign --ks-key-alias Main --ks "./_keystore.jks" --ks-pass "pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" --key-pass "pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" "./_package/Jazz2_Debug.apk"
+        $ANDROID_HOME/build-tools/29.0.3/zipalign -p 4 "./_build/android/app/build/outputs/apk/$buildDir/$filename" "./_package/Jazz2d.apk"
+        $ANDROID_HOME/build-tools/29.0.3/apksigner sign --ks-key-alias Main --ks "./_keystore.jks" --ks-pass "pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" --key-pass "pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" "./_package/Jazz2d.apk"
         
     - name: 'Upload Package'
       uses: actions/upload-artifact@v3
       with:
-        name: Jazz2_Android_Debug_${{ matrix.DisplayName }}
+        name: Jazz2_Android_DEBUG_${{ matrix.DisplayName }}
         path: ./_package/

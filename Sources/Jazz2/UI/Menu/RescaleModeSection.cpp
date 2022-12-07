@@ -13,6 +13,7 @@ namespace Jazz2::UI::Menu
 		_items[(int)Item::_3xBrz].Name = "3xBRZ"_s;
 		_items[(int)Item::Crt].Name = "CRT"_s;
 		_items[(int)Item::Monochrome].Name = "Monochrome"_s;
+		_items[(int)Item::Scanlines].Name = "Scanlines"_s;
 	}
 
 	void RescaleModeSection::OnShow(IMenuContainer* root)
@@ -132,10 +133,15 @@ namespace Jazz2::UI::Menu
 			case (int)Item::_3xBrz: newMode = RescaleMode::_3xBrz; break;
 			case (int)Item::Crt: newMode = RescaleMode::Crt; break;
 			case (int)Item::Monochrome: newMode = RescaleMode::Monochrome; break;
+			case (int)Item::Scanlines: newMode = RescaleMode::Scanlines; break;
 		}
 
 		if ((PreferencesCache::ActiveRescaleMode & RescaleMode::TypeMask) != newMode) {
 			PreferencesCache::ActiveRescaleMode = newMode | (PreferencesCache::ActiveRescaleMode & ~RescaleMode::TypeMask);
+			if (newMode == RescaleMode::Scanlines) {
+				// Turn off Antialiasing when using Scanlines
+				PreferencesCache::ActiveRescaleMode &= ~RescaleMode::UseAntialiasing;
+			}
 			PreferencesCache::Save();
 			_root->ApplyPreferencesChanges(ChangedPreferencesType::Graphics);
 		}

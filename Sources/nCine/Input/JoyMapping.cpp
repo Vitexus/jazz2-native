@@ -1,10 +1,11 @@
 #include "JoyMapping.h"
 #include "IInputManager.h"
-#include <cstring> // for memcpy()
-#include <cstdlib> // for strtoul()
 #include "IInputEventHandler.h"
 #include "../IO/FileSystem.h"
 #include "../Primitives/Vector2.h"
+
+#include <cstring> // for memcpy()
+#include <cstdlib> // for strtoul()
 
 #include <Containers/SmallVector.h>
 
@@ -99,14 +100,18 @@ namespace nCine
 
 	JoyMapping::MappingDescription::MappingDescription()
 	{
-		for (unsigned int i = 0; i < MaxNumAxes; i++)
+		for (unsigned int i = 0; i < MaxNumAxes; i++) {
 			axes[i].name = AxisName::UNKNOWN;
-		for (unsigned int i = 0; i < MaxNumAxes; i++)
+		}
+		for (unsigned int i = 0; i < MaxNumAxes; i++) {
 			buttonAxes[i] = AxisName::UNKNOWN;
-		for (unsigned int i = 0; i < MaxNumButtons; i++)
+		}
+		for (unsigned int i = 0; i < MaxNumButtons; i++) {
 			buttons[i] = ButtonName::UNKNOWN;
-		for (unsigned int i = 0; i < MaxHatButtons; i++)
+		}
+		for (unsigned int i = 0; i < MaxHatButtons; i++) {
 			hats[i] = ButtonName::UNKNOWN;
+		}
 	}
 
 	JoyMapping::MappedJoystick::MappedJoystick()
@@ -145,14 +150,14 @@ namespace nCine
 
 	void JoyMapping::init(const IInputManager* inputManager)
 	{
-		ASSERT(inputManager);
+		ASSERT(inputManager != nullptr);
 		inputManager_ = inputManager;
 		checkConnectedJoystics();
 	}
 
 	bool JoyMapping::addMappingFromString(const char* mappingString)
 	{
-		ASSERT(mappingString);
+		ASSERT(mappingString != nullptr);
 
 		MappedJoystick newMapping;
 		const bool parsed = parseMappingFromString(mappingString, newMapping);
@@ -171,7 +176,7 @@ namespace nCine
 
 	void JoyMapping::addMappingsFromStrings(const char** mappingStrings)
 	{
-		ASSERT(mappingStrings);
+		ASSERT(mappingStrings != nullptr);
 
 		while (*mappingStrings) {
 			MappedJoystick newMapping;
@@ -179,8 +184,9 @@ namespace nCine
 			if (parsed) {
 				int index = findMappingByGuid(newMapping.guid);
 				// if GUID is not found then mapping has to be added, not replaced
-				if (index < 0)
+				if (index < 0) {
 					index = mappings_.size();
+				}
 				mappings_[index] = newMapping;
 			}
 			mappingStrings++;
@@ -232,8 +238,9 @@ namespace nCine
 
 	void JoyMapping::onJoyButtonPressed(const JoyButtonEvent& event)
 	{
-		if (inputEventHandler_ == nullptr)
+		if (inputEventHandler_ == nullptr) {
 			return;
+		}
 
 		const auto& mapping = assignedMappings_[event.joyId];
 		const bool mappingIsValid = (mapping.isValid && event.buttonId >= 0 && event.buttonId < static_cast<int>(MappingDescription::MaxNumButtons));
@@ -261,8 +268,9 @@ namespace nCine
 
 	void JoyMapping::onJoyButtonReleased(const JoyButtonEvent& event)
 	{
-		if (inputEventHandler_ == nullptr)
+		if (inputEventHandler_ == nullptr) {
 			return;
+		}
 
 		const auto& mapping = assignedMappings_[event.joyId];
 		const bool mappingIsValid = (mapping.isValid && event.buttonId >= 0 && event.buttonId < static_cast<int>(MappingDescription::MaxNumButtons));
@@ -290,8 +298,9 @@ namespace nCine
 
 	void JoyMapping::onJoyHatMoved(const JoyHatEvent& event)
 	{
-		if (inputEventHandler_ == nullptr)
+		if (inputEventHandler_ == nullptr) {
 			return;
+		}
 
 		const auto& mapping = assignedMappings_[event.joyId];
 		// Only the first gamepad hat is mapped
@@ -327,8 +336,9 @@ namespace nCine
 
 	void JoyMapping::onJoyAxisMoved(const JoyAxisEvent& event)
 	{
-		if (inputEventHandler_ == nullptr)
+		if (inputEventHandler_ == nullptr) {
 			return;
+		}
 
 		const auto& mapping = assignedMappings_[event.joyId];
 		const bool mappingIsValid = (mapping.isValid && event.axisId >= 0 && event.axisId < static_cast<int>(MappingDescription::MaxNumAxes));
@@ -383,7 +393,7 @@ namespace nCine
 				mapping.desc = mappings_[index].desc;
 
 				const uint8_t* g = joyGuid.data;
-				LOGI_X("Joystick mapping found for \"%s\" with GUID \"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\" also known as \"%s\" (%d)", joyName, g[0], g[1], g[2], g[3], g[4], g[5], g[6], g[7], g[8], g[9], g[10], g[11], g[12], g[13], g[14], g[15], mappings_[index].name, event.joyId);
+				LOGI_X("Joystick mapping found for \"%s\" [%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x] (%d), also known as \"%s\"", joyName, g[0], g[1], g[2], g[3], g[4], g[5], g[6], g[7], g[8], g[9], g[10], g[11], g[12], g[13], g[14], g[15], event.joyId, mappings_[index].name);
 			}
 		}
 
@@ -392,13 +402,17 @@ namespace nCine
 			if (index != -1) {
 				mapping.isValid = true;
 				mapping.desc = mappings_[index].desc;
-				LOGI_X("Joystick mapping found for \"%s\" (%d)", joyName, event.joyId);
+
+				const uint8_t* g = joyGuid.data;
+				LOGI_X("Joystick mapping found for \"%s\" [%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x] (%d)", joyName, g[0], g[1], g[2], g[3], g[4], g[5], g[6], g[7], g[8], g[9], g[10], g[11], g[12], g[13], g[14], g[15], event.joyId);
 			}
 		}
 
 #if defined(DEATH_TARGET_ANDROID)
 		if (!mapping.isValid) {
-			LOGI_X("Joystick mapping not found for \"%s\" (%d), using Android default mapping", joyName, event.joyId);
+			const uint8_t* g = joyGuid.data;
+			LOGI_X("Joystick mapping not found for \"%s\" [%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x] (%d), using Android default mapping", joyName, g[0], g[1], g[2], g[3], g[4], g[5], g[6], g[7], g[8], g[9], g[10], g[11], g[12], g[13], g[14], g[15], event.joyId);
+			
 			mapping.isValid = true;
 
 			for (int i = 0; i < _countof(AndroidAxisNameMapping); i++) {
@@ -422,11 +436,18 @@ namespace nCine
 #endif
 
 		if (!mapping.isValid) {
-			const int index = findMappingByGuid(JoystickGuidType::Xinput);
-			if (index != -1) {
-				mapping.isValid = true;
-				mapping.desc = mappings_[index].desc;
-				LOGI_X("Joystick mapping not found for \"%s\" (%d), using XInput", joyName, event.joyId);
+			const StringView joyNameView = joyName;
+			// Razer Keyboards are incorrectly recognized as joystick in some cases, don't assign XInput mapping to them
+			bool isBlacklisted = (joyNameView.contains("Razer "_s) && joyNameView.contains("Keyboard"_s));
+			if (!isBlacklisted) {
+				const int index = findMappingByGuid(JoystickGuidType::Xinput);
+				if (index != -1) {
+					mapping.isValid = true;
+					mapping.desc = mappings_[index].desc;
+
+					const uint8_t* g = joyGuid.data;
+					LOGI_X("Joystick mapping not found for \"%s\" [%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x] (%d), using XInput mapping", joyName, g[0], g[1], g[2], g[3], g[4], g[5], g[6], g[7], g[8], g[9], g[10], g[11], g[12], g[13], g[14], g[15], event.joyId);
+				}
 			}
 		}
 
@@ -734,8 +755,9 @@ namespace nCine
 	{
 		int buttonMapping = -1;
 
-		if (end - start <= 3 && start[0] == 'b')
+		if (end - start <= 3 && start[0] == 'b') {
 			buttonMapping = atoi(&start[1]);
+		}
 
 		return buttonMapping;
 	}
@@ -749,8 +771,9 @@ namespace nCine
 			parsedHatMapping = atoi(&start[3]);
 
 		// `h0.0` is not considered a valid mapping
-		if (parsedHatMapping > 0)
+		if (parsedHatMapping > 0) {
 			hatMapping = hatStateToIndex(parsedHatMapping);
+		}
 
 		return hatMapping;
 	}
@@ -782,5 +805,4 @@ namespace nCine
 		}
 		(*end)++;
 	}
-
 }

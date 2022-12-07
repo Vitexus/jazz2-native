@@ -1,13 +1,10 @@
 #include "GLShader.h"
 #include "GLDebug.h"
+#include "../../Application.h"
 #include "../../IO/FileSystem.h"
 #include "../../../Common.h"
 
 #include <string>
-
-#if defined(DEATH_TARGET_EMSCRIPTEN) || defined(WITH_ANGLE)
-#	include "../../Application.h"
-#endif
 
 namespace nCine
 {
@@ -28,7 +25,7 @@ namespace nCine
 	///////////////////////////////////////////////////////////
 
 	GLShader::GLShader(GLenum type)
-		: glHandle_(0), status_(Status::NOT_COMPILED)
+		: glHandle_(0), status_(Status::NotCompiled)
 	{
 		if (patchLines.empty()) {
 #if (defined(WITH_OPENGLES) && GL_ES_VERSION_3_0) || defined(DEATH_TARGET_EMSCRIPTEN)
@@ -45,17 +42,15 @@ namespace nCine
 			patchLines.append("#define WITH_ANGLE\n");
 #endif
 
-#if defined(DEATH_TARGET_EMSCRIPTEN) || defined(WITH_ANGLE)
 			// ANGLE does not seem capable of handling large arrays that are not entirely filled.
 			// A small array size will also make shader compilation a lot faster.
 			if (theApplication().appConfiguration().fixedBatchSize > 0) {
 				patchLines.append("#define WITH_FIXED_BATCH_SIZE\n");
-				//patchLines.formatAppend("#define BATCH_SIZE (%u)\n", theApplication().appConfiguration().fixedBatchSize);
 				patchLines.append("#define BATCH_SIZE (");
 				patchLines.append(std::to_string(theApplication().appConfiguration().fixedBatchSize));
 				patchLines.append(")\n");
 			}
-#endif
+
 			// Exclude patch lines when counting line numbers in info logs
 			patchLines.append("#line 0\n");
 		}
@@ -106,18 +101,19 @@ namespace nCine
 	{
 		glCompileShader(glHandle_);
 
-		if (errorChecking == ErrorChecking::IMMEDIATE) {
+		if (errorChecking == ErrorChecking::Immediate) {
 			return checkCompilation(logOnErrors);
 		} else {
-			status_ = Status::COMPILED_WITH_DEFERRED_CHECKS;
+			status_ = Status::CompiledWithDeferredChecks;
 			return true;
 		}
 	}
 
 	bool GLShader::checkCompilation(bool logOnErrors)
 	{
-		if (status_ == Status::COMPILED)
+		if (status_ == Status::Compiled) {
 			return true;
+		}
 
 		GLint status = 0;
 		glGetShaderiv(glHandle_, GL_COMPILE_STATUS, &status);
@@ -128,21 +124,22 @@ namespace nCine
 				glGetShaderiv(glHandle_, GL_INFO_LOG_LENGTH, &length);
 				if (length > 0) {
 					glGetShaderInfoLog(glHandle_, MaxInfoLogLength, &length, infoLogString_);
+					// Trim whitespace - driver messages usually contain newline(s) at the end
+					*(MutableStringView(infoLogString_).trimmed().end()) = '\0';
 					LOGW_X("%s", infoLogString_);
 				}
 			}
 #endif
-			status_ = Status::COMPILATION_FAILED;
+			status_ = Status::CompilationFailed;
 			return false;
 		}
 
-		status_ = Status::COMPILED;
+		status_ = Status::Compiled;
 		return true;
 	}
 
 	void GLShader::setObjectLabel(const char* label)
 	{
-		GLDebug::objectLabel(GLDebug::LabelTypes::SHADER, glHandle_, label);
+		GLDebug::objectLabel(GLDebug::LabelTypes::Shader, glHandle_, label);
 	}
-
 }

@@ -118,6 +118,8 @@ namespace nCine
 		short int axesMapping_[MaxAxes];
 		bool buttons_[MaxButtons];
 		float axesValues_[MaxAxes];
+		float axesMinValues_[MaxAxes];
+		float axesMaxValues_[MaxAxes];
 		unsigned char hatState_; // no more than one hat is supported
 
 		friend class AndroidInputManager;
@@ -188,7 +190,7 @@ namespace nCine
 		static JoyAxisEvent joyAxisEvent_;
 		static JoyConnectionEvent joyConnectionEvent_;
 		/// Update rate of `updateJoystickConnections()` in seconds
-		static const float JoyCheckRate;
+		static constexpr float JoyCheckRateSecs = 2.0f;
 		static Timer joyCheckTimer_;
 
 		/// Processes a gamepad event

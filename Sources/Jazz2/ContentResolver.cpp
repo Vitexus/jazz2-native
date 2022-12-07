@@ -13,6 +13,12 @@
 #include "../nCine/Graphics/ITextureLoader.h"
 #include "../nCine/Base/Random.h"
 
+#if defined(DEATH_TARGET_ANDROID)
+#	include "../nCine/Backends/Android/AndroidApplication.h"
+#elif defined(DEATH_TARGET_WINDOWS_RT)
+#	include <Environment.h>
+#endif
+
 #if defined(DEATH_TARGET_SSE42) || defined(DEATH_TARGET_AVX)
 #	define RAPIDJSON_SSE42
 #elif defined(DEATH_TARGET_SSE2)
@@ -40,7 +46,11 @@ namespace Jazz2
 	{
 		std::memset(_palettes, 0, sizeof(_palettes));
 
-#if defined(DEATH_TARGET_UNIX)
+#if defined(DEATH_TARGET_ANDROID)
+		StringView externalPath = static_cast<AndroidApplication&>(theApplication()).externalDataPath();
+		_cachePath = fs::JoinPath(externalPath, "Cache/"_s);
+		_sourcePath = fs::JoinPath(externalPath, "Source/"_s);
+#elif defined(DEATH_TARGET_UNIX)
 #	if !defined(NCINE_LINUX_PACKAGE)
 #		define NCINE_LINUX_PACKAGE "Jazz² Resurrection"
 #	endif
@@ -63,10 +73,37 @@ namespace Jazz2
 			_sourcePath = "Source/"_s;
 		}
 #elif defined(DEATH_TARGET_WINDOWS_RT)
-		// Returns local application data directory on Windows RT
-		const String& appData = fs::GetSavePath("Jazz² Resurrection"_s);
-		_cachePath = fs::JoinPath(appData, "Cache\\"_s);
-		_sourcePath = fs::JoinPath(appData, "Source\\"_s);
+		bool found = false;
+		if (Environment::CurrentDeviceType == DeviceType::Xbox) {
+			// Try to use external drives (D:, E:, F:) on Xbox, "\\?\" path prefix is required on Xbox
+			StringView externalPath = "\\\\?\\D:\\Games\\Jazz² Resurrection\\"_s;
+			_sourcePath = fs::JoinPath(externalPath, "Source\\"_s);
+			if (fs::IsDirectory(_sourcePath)) {
+				_cachePath = fs::JoinPath(externalPath, "Cache\\"_s);
+				found = true;
+			} else {
+				externalPath = "\\\\?\\E:\\Games\\Jazz² Resurrection\\"_s;
+				_sourcePath = fs::JoinPath(externalPath, "Source\\"_s);
+				if (fs::IsDirectory(_sourcePath)) {
+					_cachePath = fs::JoinPath(externalPath, "Cache\\"_s);
+					found = true;
+				} else {
+					externalPath = "\\\\?\\F:\\Games\\Jazz² Resurrection\\"_s;
+					_sourcePath = fs::JoinPath(externalPath, "Source\\"_s);
+					if (fs::IsDirectory(_sourcePath)) {
+						_cachePath = fs::JoinPath(externalPath, "Cache\\"_s);
+						found = true;
+					}
+				}
+			}
+		}
+
+		if (!found) {
+			// Returns local application data directory on Windows RT
+			const String& appData = fs::GetSavePath("Jazz² Resurrection"_s);
+			_cachePath = fs::JoinPath(appData, "Cache\\"_s);
+			_sourcePath = fs::JoinPath(appData, "Source\\"_s);
+		}
 		_contentPath = "Content\\"_s;
 #endif
 	}
@@ -963,61 +1000,63 @@ namespace Jazz2
 	void ContentResolver::CompileShaders()
 	{
 		_precompiledShaders[(int)PrecompiledShader::Lighting] = std::make_unique<Shader>("Lighting",
-			Shader::LoadMode::STRING, Shaders::LightingVs, Shaders::LightingFs);
+			Shader::LoadMode::String, Shaders::LightingVs, Shaders::LightingFs);
 		_precompiledShaders[(int)PrecompiledShader::BatchedLighting] = std::make_unique<Shader>("BatchedLighting",
-			Shader::LoadMode::STRING, Shader::Introspection::NO_UNIFORMS_IN_BLOCKS, Shaders::BatchedLightingVs, Shaders::LightingFs);
+			Shader::LoadMode::String, Shader::Introspection::NoUniformsInBlocks, Shaders::BatchedLightingVs, Shaders::LightingFs);
 		_precompiledShaders[(int)PrecompiledShader::Lighting]->registerBatchedShader(*_precompiledShaders[(int)PrecompiledShader::BatchedLighting]);
 
 		_precompiledShaders[(int)PrecompiledShader::Blur] = std::make_unique<Shader>("Blur",
-			Shader::LoadMode::STRING, Shader::DefaultVertex::SPRITE, Shaders::BlurFs);
+			Shader::LoadMode::String, Shader::DefaultVertex::SPRITE, Shaders::BlurFs);
 		_precompiledShaders[(int)PrecompiledShader::Downsample] = std::make_unique<Shader>("Downsample",
-			Shader::LoadMode::STRING, Shader::DefaultVertex::SPRITE, Shaders::DownsampleFs);
+			Shader::LoadMode::String, Shader::DefaultVertex::SPRITE, Shaders::DownsampleFs);
 		_precompiledShaders[(int)PrecompiledShader::Combine] = std::make_unique<Shader>("Combine",
-			Shader::LoadMode::STRING, Shaders::CombineVs, Shaders::CombineFs);
+			Shader::LoadMode::String, Shaders::CombineVs, Shaders::CombineFs);
 		_precompiledShaders[(int)PrecompiledShader::CombineWithWater] = std::make_unique<Shader>("CombineWithWater",
-			Shader::LoadMode::STRING, Shaders::CombineVs, Shaders::CombineWithWaterFs);
+			Shader::LoadMode::String, Shaders::CombineVs, Shaders::CombineWithWaterFs);
 
 		_precompiledShaders[(int)PrecompiledShader::TexturedBackground] = std::make_unique<Shader>("TexturedBackground",
-			Shader::LoadMode::STRING, Shader::DefaultVertex::SPRITE, Shaders::TexturedBackgroundFs);
+			Shader::LoadMode::String, Shader::DefaultVertex::SPRITE, Shaders::TexturedBackgroundFs);
 		_precompiledShaders[(int)PrecompiledShader::TexturedBackgroundCircle] = std::make_unique<Shader>("TexturedBackground",
-			Shader::LoadMode::STRING, Shader::DefaultVertex::SPRITE, Shaders::TexturedBackgroundCircleFs);
+			Shader::LoadMode::String, Shader::DefaultVertex::SPRITE, Shaders::TexturedBackgroundCircleFs);
 
 		_precompiledShaders[(int)PrecompiledShader::Colorize] = std::make_unique<Shader>("Colorize",
-			Shader::LoadMode::STRING, Shader::DefaultVertex::SPRITE, Shaders::ColorizeFs);
+			Shader::LoadMode::String, Shader::DefaultVertex::SPRITE, Shaders::ColorizeFs);
 		_precompiledShaders[(int)PrecompiledShader::BatchedColorize] = std::make_unique<Shader>("BatchedColorize",
-			Shader::LoadMode::STRING, Shader::Introspection::NO_UNIFORMS_IN_BLOCKS, Shader::DefaultVertex::BATCHED_SPRITES, Shaders::ColorizeFs);
+			Shader::LoadMode::String, Shader::Introspection::NoUniformsInBlocks, Shader::DefaultVertex::BATCHED_SPRITES, Shaders::ColorizeFs);
 		_precompiledShaders[(int)PrecompiledShader::Colorize]->registerBatchedShader(*_precompiledShaders[(int)PrecompiledShader::BatchedColorize]);
 
 		_precompiledShaders[(int)PrecompiledShader::Outline] = std::make_unique<Shader>("Outline",
-			Shader::LoadMode::STRING, Shader::DefaultVertex::SPRITE, Shaders::OutlineFs);
+			Shader::LoadMode::String, Shader::DefaultVertex::SPRITE, Shaders::OutlineFs);
 		_precompiledShaders[(int)PrecompiledShader::BatchedOutline] = std::make_unique<Shader>("BatchedOutline",
-			Shader::LoadMode::STRING, Shader::Introspection::NO_UNIFORMS_IN_BLOCKS, Shader::DefaultVertex::BATCHED_SPRITES, Shaders::OutlineFs);
+			Shader::LoadMode::String, Shader::Introspection::NoUniformsInBlocks, Shader::DefaultVertex::BATCHED_SPRITES, Shaders::OutlineFs);
 		_precompiledShaders[(int)PrecompiledShader::Outline]->registerBatchedShader(*_precompiledShaders[(int)PrecompiledShader::BatchedOutline]);
 
 		_precompiledShaders[(int)PrecompiledShader::WhiteMask] = std::make_unique<Shader>("WhiteMask",
-			Shader::LoadMode::STRING, Shader::DefaultVertex::SPRITE, Shaders::WhiteMaskFs);
+			Shader::LoadMode::String, Shader::DefaultVertex::SPRITE, Shaders::WhiteMaskFs);
 		_precompiledShaders[(int)PrecompiledShader::PartialWhiteMask] = std::make_unique<Shader>("PartialWhiteMask",
-			Shader::LoadMode::STRING, Shader::DefaultVertex::SPRITE, Shaders::PartialWhiteMaskFs);
+			Shader::LoadMode::String, Shader::DefaultVertex::SPRITE, Shaders::PartialWhiteMaskFs);
 		_precompiledShaders[(int)PrecompiledShader::BatchedWhiteMask] = std::make_unique<Shader>("BatchedWhiteMask",
-			Shader::LoadMode::STRING, Shader::Introspection::NO_UNIFORMS_IN_BLOCKS, Shader::DefaultVertex::BATCHED_SPRITES, Shaders::WhiteMaskFs);
+			Shader::LoadMode::String, Shader::Introspection::NoUniformsInBlocks, Shader::DefaultVertex::BATCHED_SPRITES, Shaders::WhiteMaskFs);
 		_precompiledShaders[(int)PrecompiledShader::WhiteMask]->registerBatchedShader(*_precompiledShaders[(int)PrecompiledShader::BatchedWhiteMask]);
 		_precompiledShaders[(int)PrecompiledShader::PartialWhiteMask]->registerBatchedShader(*_precompiledShaders[(int)PrecompiledShader::BatchedWhiteMask]);
 
 #if defined(ALLOW_RESCALE_SHADERS)
 		_precompiledShaders[(int)PrecompiledShader::ResizeHQ2x] = std::make_unique<Shader>("ResizeHQ2x",
-			Shader::LoadMode::STRING, Shaders::ResizeHQ2xVs, Shaders::ResizeHQ2xFs);
+			Shader::LoadMode::String, Shaders::ResizeHQ2xVs, Shaders::ResizeHQ2xFs);
 		_precompiledShaders[(int)PrecompiledShader::Resize3xBrz] = std::make_unique<Shader>("Resize3xBrz",
-			Shader::LoadMode::STRING, Shaders::Resize3xBrzVs, Shaders::Resize3xBrzFs);
+			Shader::LoadMode::String, Shaders::Resize3xBrzVs, Shaders::Resize3xBrzFs);
 		_precompiledShaders[(int)PrecompiledShader::ResizeCrt] = std::make_unique<Shader>("ResizeCrt",
-			Shader::LoadMode::STRING, Shaders::ResizeCrtVs, Shaders::ResizeCrtFs);
+			Shader::LoadMode::String, Shaders::ResizeCrtVs, Shaders::ResizeCrtFs);
 		_precompiledShaders[(int)PrecompiledShader::ResizeMonochrome] = std::make_unique<Shader>("ResizeMonochrome",
-			Shader::LoadMode::STRING, Shaders::ResizeMonochromeVs, Shaders::ResizeMonochromeFs);
+			Shader::LoadMode::String, Shaders::ResizeMonochromeVs, Shaders::ResizeMonochromeFs);
+		_precompiledShaders[(int)PrecompiledShader::ResizeScanlines] = std::make_unique<Shader>("ResizeScanlines",
+			Shader::LoadMode::String, Shaders::ResizeScanlinesVs, Shaders::ResizeScanlinesFs);
 #endif
 		_precompiledShaders[(int)PrecompiledShader::Antialiasing] = std::make_unique<Shader>("Antialiasing",
-			Shader::LoadMode::STRING, Shaders::AntialiasingVs, Shaders::AntialiasingFs);
+			Shader::LoadMode::String, Shaders::AntialiasingVs, Shaders::AntialiasingFs);
 
 		_precompiledShaders[(int)PrecompiledShader::Transition] = std::make_unique<Shader>("Transition",
-			Shader::LoadMode::STRING, Shaders::TransitionVs, Shaders::TransitionFs);
+			Shader::LoadMode::String, Shaders::TransitionVs, Shaders::TransitionFs);
 	}
 
 	std::unique_ptr<Texture> ContentResolver::GetNoiseTexture()

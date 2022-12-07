@@ -88,10 +88,10 @@ namespace Jazz2::Compatibility
 				case JJ2ParamUInt: {
 					uint32_t value = (paramInt & ((1 << param.second()) - 1));
 					if (param.second() > 8) {
-						*(uint16_t*)&eventParams[i] = *(uint16_t*)&value;
+						*(uint16_t*)&eventParams[i] = (uint16_t)value;
 						i += 2;
 					} else {
-						eventParams[i++] = *(uint8_t*)&value;
+						eventParams[i++] = (uint8_t)value;
 					}
 					paramInt = paramInt >> param.second();
 					break;
@@ -105,10 +105,10 @@ namespace Jazz2::Compatibility
 						value = (uint32_t)(-highestBitValue + (value - highestBitValue));
 					}
 					if (param.second() > 8) {
-						*(uint16_t*)&eventParams[i] = *(uint16_t*)&value;
+						*(uint16_t*)&eventParams[i] = (uint16_t)value;
 						i += 2;
 					} else {
-						eventParams[i++] = *(uint8_t*)&value;
+						eventParams[i++] = (uint8_t)value;
 					}
 					paramInt = paramInt >> param.second();
 					break;
@@ -136,7 +136,7 @@ namespace Jazz2::Compatibility
 
 		Add(JJ2Event::SAVE_POINT, [](JJ2Level* level, uint32_t jj2Params) -> ConversionResult {
 			// Green xmas-themed checkpoints for some levels
-			bool isXmas = level->Tileset.findOr("xmas"_s, level->Tileset.end()) != level->Tileset.end();
+			bool isXmas = (level->Tileset.find("xmas"_s) != nullptr);
 			uint8_t theme = (isXmas ? 1 : 0);
 			return { EventType::Checkpoint, { theme } };
 		});

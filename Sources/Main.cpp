@@ -131,19 +131,7 @@ void GameEventHandler::onInit()
 
 	auto& resolver = ContentResolver::Current();
 	
-#if defined(DEATH_TARGET_ANDROID)
-	// Set working directory to external storage on Android
-	StringView externalPath = static_cast<AndroidApplication&>(theApplication()).externalDataPath();
-	if (!externalPath.empty()) {
-		if (fs::SetWorkingDirectory(externalPath)) {
-			LOGI_X("External storage path: %s", externalPath.data());
-		} else {
-			LOGE_X("Cannot set external storage path \"%s\"", externalPath.data());
-		}
-	} else {
-		LOGE("Cannot get external storage path");
-	}
-#elif !defined(DEATH_TARGET_EMSCRIPTEN) && !defined(DEATH_TARGET_IOS)
+#if !defined(DEATH_TARGET_ANDROID) && !defined(DEATH_TARGET_EMSCRIPTEN) && !defined(DEATH_TARGET_IOS)
 	theApplication().setAutoSuspension(false);
 
 	if (PreferencesCache::EnableFullscreen) {
@@ -416,7 +404,7 @@ RecreateCache:
 	if (!fs::IsReadableFile(animsPath)) {
 		animsPath = fs::FindPathCaseInsensitive(fs::JoinPath(resolver.GetSourcePath(), "AnimsSw.j2a"_s));
 		if (!fs::IsReadableFile(animsPath)) {
-			LOGE_X("Cannot open \".%sSource%sAnims.j2a\" file! Ensure that Jazz Jackrabbit 2 files are present in \"%s\" directory.", fs::PathSeparator, fs::PathSeparator, resolver.GetSourcePath().data());
+			LOGE_X("Cannot open \".%sSource%sAnims.j2a\" file! Make sure Jazz Jackrabbit 2 files are present in \"%s\" directory.", fs::PathSeparator, fs::PathSeparator, resolver.GetSourcePath().data());
 			_flags = Flags::IsVerified;
 			return;
 		}
@@ -424,7 +412,11 @@ RecreateCache:
 
 	String animationsPath = fs::JoinPath(resolver.GetCachePath(), "Animations"_s);
 	fs::RemoveDirectoryRecursive(animationsPath);
-	Compatibility::JJ2Anims::Convert(animsPath, animationsPath, false);
+	if (!Compatibility::JJ2Anims::Convert(animsPath, animationsPath, false)) {
+		LOGE_X("Provided Jazz Jackrabbit 2 version is not supported. Make sure supported Jazz Jackrabbit 2 version is present in \"%s\" directory.", resolver.GetSourcePath().data());
+		_flags = Flags::IsVerified;
+		return;
+	}
 
 	RefreshCacheLevels();
 
@@ -596,7 +588,7 @@ void GameEventHandler::RefreshCacheLevels()
 		} else if (extension == "j2l"_s) {
 			// Level
 			String levelName = fs::GetFileName(item);
-			if (levelName.findOr("-MLLE-Data-"_s, levelName.end()) != levelName.end()) {
+			if (levelName.find("-MLLE-Data-"_s) != nullptr) {
 				LOGI_X("Level \"%s\" skipped (MLLE extra layers).", item);
 			} else {
 				Compatibility::JJ2Level level;
@@ -653,8 +645,11 @@ void GameEventHandler::CheckUpdates()
 #if defined(DEATH_TARGET_ANDROID)
 	auto sdkVersion = AndroidJniHelper::SdkVersion();
 	auto androidId = AndroidJniWrap_Secure::AndroidId();
+	auto deviceManufacturer = AndroidJniClass_Version::deviceManufacturer();
+	auto deviceModel = AndroidJniClass_Version::deviceModel();
+	String device = (deviceModel.empty() ? deviceManufacturer : (deviceModel.hasPrefix(deviceManufacturer) ? deviceModel : deviceManufacturer + " "_s + deviceModel));
 	char DeviceDesc[64];
-	int DeviceDescLength = formatString(DeviceDesc, _countof(DeviceDesc), "%s|Android %i||2", androidId.data(), sdkVersion);
+	int DeviceDescLength = formatString(DeviceDesc, _countof(DeviceDesc), "%s|Android %i|%s|2", androidId.data(), sdkVersion, device.data());
 #elif defined(DEATH_TARGET_APPLE)
 	char DeviceDesc[64]; int DeviceDescLength;
 	if (::gethostname(DeviceDesc, _countof(DeviceDesc) - (sizeof("|macOS||5") - 1)) == 0) {
